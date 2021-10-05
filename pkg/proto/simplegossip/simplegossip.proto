@@ -1,6 +1,6 @@
 syntax = "proto3";
 package gossip;
-go_package = "simplegossip/" 
+option go_package = "simplegossip/";
 
 
 message SubmitMessageStruct {

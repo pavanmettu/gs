@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"flag"
 	"fmt"
-	pb "github.com/pmettu/gs/pkg/proto/simplegossip/simplegossip"
+	pb "github.com/pmettu/gs/pkg/proto/simplegossip"
 	"google.golang.org/grpc"
 	"log"
 	"net"
