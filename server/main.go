@@ -1,4 +1,4 @@
-package main
+package simplegossip
 
 import (
 	"context"
@@ -53,6 +53,7 @@ func gossipnodes(s *gossipServer, gt gossipTuple, nodes []int32) {
 		if err != nil {
 			log.Fatalf("Error sending Gossip message...\n")
 		}
+		fmt.Printf("Response is %v\n", resp)
 	}
 }
 
