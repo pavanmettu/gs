@@ -1,15 +1,17 @@
-package simplegossip
+package main
 
 import (
 	"context"
 	"crypto/md5"
 	"flag"
 	"fmt"
-	pb "github.com/pmettu/gs/pkg/proto/simplegossip"
-	"google.golang.org/grpc"
 	"log"
 	"net"
+	pb "pkg/proto/simplegossip"
+	"simplegossip"
 	"sync"
+
+	"google.golang.org/grpc"
 )
 
 var (
@@ -46,8 +48,7 @@ func gossipnodes(s *gossipServer, gt gossipTuple, nodes []int32) {
 			log.Fatalf("Cannot connect to gRPC server %s\n", nodeaddr)
 		}
 		defer gconn.Close()
-
-		gms := &GossipMessageStruct{Sendernodeid: s.nodeid, Rcvrnodeid: nodes[i], Gmessage: gt.gmsg, Nodepaths: gt.gpath}
+		gms := &simplegossip.GossipMessageStruct{Sendernodeid: s.nodeid, Rcvrnodeid: nodes[i], Gmessage: gt.gmsg, Nodepaths: gt.gpath}
 		c := pb.NewGossipServiceClient(gconn)
 		resp, err := c.GossipMessage(context.Background(), &gms)
 		if err != nil {
@@ -60,12 +61,12 @@ func gossipnodes(s *gossipServer, gt gossipTuple, nodes []int32) {
 /*
  * SubmitMessage: Submits a message to the network after writing in its own cache.
  */
-func (s *gossipServer) SubmitMessage(ctx context.Context, msg *pb.SubmitMessageStruct) (*pb.SubmitMessageRes, error) {
+func (s *gossipServer) SubmitMessage(ctx context.Context, msg *simplegossip.SubmitMessageStruct) (*simplegossip.SubmitMessageRes, error) {
 	fmt.Println("in SubmitMessage..")
 	// Hash the message first
 
 	hmd5 := md5.Sum([]byte(msg.gmessage))
-	val, ok := gc[string(hmd5[:])]
+	_, ok := gc[string(hmd5[:])]
 	if !ok {
 		// Gossip only if we don't have the message in our system
 		var gt gossipTuple
@@ -106,14 +107,13 @@ func (s *gossipServer) SubmitMessage(ctx context.Context, msg *pb.SubmitMessageS
 		// Send gossip to all nodes connected to this node
 		go gossipnodes(s, gt, nodes)
 	}
-	sres := &SubmitMessageRes{Messageadded: true, Messageid: string(hmd5[:])}
-	return
-
+	sres := &simplegossip.SubmitMessageRes{Messageadded: true, Messageid: string(hmd5[:])}
+	return sres, nil
 }
 
-func (s *gossipServer) QueryMessage(ctx context.Context, msg *pb.QueryMessageStruct) (*pb.QueryMessageRes, error) {
+func (s *gossipServer) QueryMessage(ctx context.Context, msg *simplegossip.QueryMessageStruct) (*simplegossip.QueryMessageRes, error) {
 	fmt.Println("In QueryMessage..")
-	var qres QueryMessageRes
+	var qres simplegossip.QueryMessageRes
 	gmsg, ok := gc[msg.messageid]
 	if ok {
 		qres.Messagefound = true
@@ -124,21 +124,21 @@ func (s *gossipServer) QueryMessage(ctx context.Context, msg *pb.QueryMessageStr
 	return qres, nil
 }
 
-func (s *gossipServer) ListMessage(ctx context.Context, msg *pb.ListMessageStruct) (*pb.ListMessageRes, error) {
+func (s *gossipServer) ListMessage(ctx context.Context, msg *simplegossip.ListMessageStruct) (*simplegossip.ListMessageRes, error) {
 	fmt.Println("In ListMessage.")
 	// Go through the list of messages and join them into one
-	var lres ListMessageRes
+	var lres simplegossip.ListMessageRes
 	lres.Moremessages = false
-	for u, v := range gc {
-		lres.Gmessages = append(lres.Gmessages, v.gmsg)
+	for _, vmsg := range gc {
+		lres.Gmessages = append(lres.Gmessages, vmsg.gmsg)
 	}
 	return lres, nil
 }
 
-func (s *gossipServer) GossipMessage(ctx context.Context, msg *pb.GossipMessageStruct) (*pb.GossipMessageRes, error) {
+func (s *gossipServer) GossipMessage(ctx context.Context, msg *simplegossip.GossipMessageStruct) (*simplegossip.GossipMessageRes, error) {
 	fmt.Println("In GossipMessage")
 	hmd5 := md5.Sum([]byte(msg.gmessage))
-	val, ok := gc[string(hmd5[:])]
+	_, ok := gc[string(hmd5[:])]
 	if !ok {
 		// Gossip only if we don't have the message in our system
 		var gt gossipTuple
@@ -182,11 +182,11 @@ func (s *gossipServer) GossipMessage(ctx context.Context, msg *pb.GossipMessageS
 		// Send gossip to all nodes connected to this node
 		go gossipnodes(s, gt, nodes)
 	}
-	sres := &GossipMessageRes{Rcvrnodeid: msg.Rcvrnodeid, Msgaccepted: true}
+	sres := &simplegossip.GossipMessageRes{Rcvrnodeid: msg.Rcvrnodeid, Msgaccepted: true}
 	return sres, nil
 }
 
-func (s *gossipServer) ResyncMessages(ctx context.Context, msg *pb.ResyncMessagesStruct) (*pb.ResyncMessagesRes, error) {
+func (s *gossipServer) ResyncMessages(ctx context.Context, msg *simplegossip.ResyncMessagesStruct) (*simplegossip.ResyncMessagesRes, error) {
 	fmt.Println("In ResyncMessages..")
 	return nil, nil
 }

@@ -1,6 +1,6 @@
 syntax = "proto3";
 package gossip;
-option go_package = "simplegossip/";
+option go_package = "gs/pkg/proto/simplegossip";
 
 
 message SubmitMessageStruct {
@@ -67,7 +67,3 @@ service GossipService {
 	rpc GossipMessage (GossipMessageStruct) returns (GossipMessageRes) {}
 	rpc ResyncMessages (ResyncMessagesStruct) returns (ResyncMessagesRes) {}
 }
-
-
-
-

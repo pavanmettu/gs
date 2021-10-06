@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.1.0
 // - protoc             v3.15.8
-// source: simplegossip.proto
+// source: simplegossip/simplegossip.proto
 
 package simplegossip
 
@@ -245,5 +245,5 @@ var GossipService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "simplegossip.proto",
+	Metadata: "simplegossip/simplegossip.proto",
 }
