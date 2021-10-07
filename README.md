@@ -21,6 +21,7 @@
 5. Communication Security between Nodes.(no Authentication/TLS - For now Simple
 Request/Response)
 6. Dead Nodes.
+7. Dockerising servers.
 
 ## Design:
 
