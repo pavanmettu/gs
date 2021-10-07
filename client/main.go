@@ -27,7 +27,6 @@ func gssendmsg(msg string, nodeid int, portid int) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	serverAddr := fmt.Sprintf("localhost:%d", pt)
-	fmt.Printf("In gssendmsg 1 %d %s\n", pt, serverAddr)
 	opts = append(opts, grpc.WithBlock())
 	opts = append(opts, grpc.WithInsecure())
 	conn, err := grpc.Dial(serverAddr, opts...)
@@ -37,7 +36,6 @@ func gssendmsg(msg string, nodeid int, portid int) {
 	defer conn.Close()
 	client := pb.NewGossipServiceClient(conn)
 	newMsg := &pb.SubmitMessageStruct{Nodeid: int32(nodeid), Gmessage: msg}
-	fmt.Printf("In gssendmsg. %v\n", newMsg)
 	res, err := client.SubmitMessage(ctx, newMsg)
 	if err != nil {
 		log.Fatalf("Error from client Submit Message. %v\n", err)

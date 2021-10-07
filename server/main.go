@@ -39,11 +39,9 @@ var rf = map[int]int{}
 
 // CLIENT: Gossip to these nodes
 func gossipnodes(s *gossipServer, gt gossipTuple, nodes []int) {
-	fmt.Printf("In gossipNodes function for sending message to nodes %v and %v\n", gt, nodes)
 	for i := 0; i < len(nodes); i++ {
 		var gconn *grpc.ClientConn
 
-		fmt.Printf("Gossip Nodes to send to %d\n", nodes[i])
 		pt := s.portid + nodes[i]
 		nodeaddr := fmt.Sprintf("localhost:%d", pt)
 		fmt.Println(nodeaddr)
@@ -58,13 +56,11 @@ func gossipnodes(s *gossipServer, gt gossipTuple, nodes []int) {
 		}
 
 		gms := &pb.GossipMessageStruct{Sendernodeid: int32(s.nodeid), Rcvrnodeid: int32(nodes[i]), Gmessage: gt.gmsg, Nodepaths: gpth}
-		fmt.Printf("GossipNodes to sender node: %d, rcvr node = %d,  msg = %v path = %v gms = %v\n", s.nodeid, nodes[i], gt.gmsg, gpth, gms)
 		c := pb.NewGossipServiceClient(gconn)
-		resp, err := c.GossipMessage(context.Background(), gms)
+		_, err = c.GossipMessage(context.Background(), gms)
 		if err != nil {
 			log.Fatalf("Error sending Gossip message...\n")
 		}
-		fmt.Printf("Response is %v\n", resp)
 	}
 }
 
@@ -88,16 +84,13 @@ func getnodes(s *gossipServer, count int) []int {
 				break
 			}
 		}
-		fmt.Printf("Gossiping to nodes from even node %v nodeid: %d\n", nodes, s.nodeid)
 	} else {
 		ncnt := 0
 		i := s.nodeid - 1
 		if i < 1 {
 			i = s.numnodes
 		}
-		fmt.Printf("ODD Node %d i = %d, count = %d\n", s.nodeid, i, count)
 		for i >= 1 {
-			fmt.Printf("GossipNodes odd loop nodes = %v i = %d ncnt = %d\n", nodes, i, ncnt)
 			nodes = append(nodes, i)
 			i--
 			ncnt++
@@ -107,9 +100,7 @@ func getnodes(s *gossipServer, count int) []int {
 			if ncnt < count && i < 1 {
 				i = s.numnodes
 			}
-			fmt.Printf("Looping again..\n")
 		}
-		fmt.Printf("Gossiping to nodes from odd node %v nodeid: %d\n", nodes, s.nodeid)
 	}
 	return nodes
 }
@@ -124,16 +115,13 @@ func GetMD5Hash(text string) string {
  * SubmitMessage: Submits a message to the network after writing in its own cache.
  */
 func (s *gossipServer) SubmitMessage(ctx context.Context, msg *pb.SubmitMessageStruct) (*pb.SubmitMessageRes, error) {
-	fmt.Printf("In SubmitMessage..%d %s\n", msg.Nodeid, msg.Gmessage)
 	// Hash the message first
 
 	hmd5 := GetMD5Hash(msg.Gmessage)
-	fmt.Printf("Message hash is  %s\n", hmd5)
 	s.pm.Lock()
 	_, ok := gc[hmd5]
 	s.pm.Unlock()
 	if !ok {
-		fmt.Printf("Message not on node %d\n", msg.Nodeid)
 		// Gossip only if we don't have the message in our system
 		var gt gossipTuple
 		gt.gmsg = msg.Gmessage
@@ -149,7 +137,6 @@ func (s *gossipServer) SubmitMessage(ctx context.Context, msg *pb.SubmitMessageS
 		gossipnodes(s, gt, nodes)
 	}
 	sres := &pb.SubmitMessageRes{Messageadded: true, Messageid: hmd5}
-	fmt.Printf("SubmitMessage successfull %v\n", sres)
 	return sres, nil
 }
 
@@ -199,7 +186,6 @@ func (s *gossipServer) GossipMessage(ctx context.Context, msg *pb.GossipMessageS
 	s.pm.Unlock()
 	if !ok {
 		// Gossip only if we don't have the message in our system
-		fmt.Printf("Didnt find the message %s\n", msg.Gmessage)
 		var gt gossipTuple
 		gt.gmsg = msg.Gmessage
 		for i := 0; i < len(msg.Nodepaths); i++ {
@@ -234,7 +220,6 @@ func main() {
 		log.Fatalf("Failed to listen on port %d %v", *portid, err)
 	}
 
-	fmt.Printf("Node: %d, Listening on port %d NumNodes: %d\n", *nodeid, pt, *numnodes)
 	// Start GRPC Server
 	s := gossipServer{}
 	s.nodeid = int(*nodeid)
