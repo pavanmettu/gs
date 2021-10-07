@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	pb "google.golang.org/gs/simplegossip"
@@ -35,7 +36,7 @@ func gssendmsg(msg string, nodeid int, portid int) {
 	}
 	defer conn.Close()
 	client := pb.NewGossipServiceClient(conn)
-	newMsg := &pb.SubmitMessageStruct{Nodeid: int(nodeid), Gmessage: msg}
+	newMsg := &pb.SubmitMessageStruct{Nodeid: int32(nodeid), Gmessage: msg}
 	fmt.Printf("In gssendmsg. %v\n", newMsg)
 	res, err := client.SubmitMessage(ctx, newMsg)
 	if err != nil {
@@ -59,7 +60,7 @@ func gsquerymsg(qmsg string, nodeid int, portid int) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	qMsg := &pb.QueryMessageStruct{Nodeid: int(nodeid), Messageid: qmsg}
+	qMsg := &pb.QueryMessageStruct{Nodeid: int32(nodeid), Messageid: qmsg}
 	res, err := client.QueryMessage(ctx, qMsg)
 	if err != nil {
 		log.Fatalf("Error from client Submit Message. %v\n", err)
@@ -81,7 +82,7 @@ func gslistmsg(nodeid int, portid int) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client := pb.NewGossipServiceClient(conn)
-	lMsg := &pb.ListMessageStruct{Nodeid: int(nodeid), Nummsgs: 100}
+	lMsg := &pb.ListMessageStruct{Nodeid: int32(nodeid), Nummsgs: 100}
 	res, err := client.ListMessage(ctx, lMsg)
 	if err != nil {
 		log.Fatalf("Error from client Submit Message. %v\n", err)
@@ -94,12 +95,27 @@ func main() {
 	flag.Parse()
 	switch *cmd {
 	case "SubmitMsg":
+		if len(flag.Args()) < 4 {
+			fmt.Println(os.Stderr, "Usage ex: client --nodeid 3  -cmd SubmitMsg --msg FacebookNode --portid 12345")
+			os.Exit(1)
+		}
 		gssendmsg(*message, *nodeid, *portid)
 	case "QueryMsg":
+		if len(flag.Args()) < 4 {
+			fmt.Println(os.Stderr, "Usage ex: client --nodeid 3  -cmd QueryMsg --qmsg FacebookNode --portid 12345")
+			os.Exit(1)
+		}
 		gsquerymsg(*qmsg, *nodeid, *portid)
 	case "ListMsg":
+		if len(flag.Args()) < 4 {
+			fmt.Println(os.Stderr, "Usage ex: client --nodeid 3  -cmd ListMsg --portid 12345")
+			os.Exit(1)
+		}
 		gslistmsg(*nodeid, *portid)
 	case "default":
+		var str string
+		fmt.Sprintf(str, "Usage ex: client --nodeid 3  --cmd SubmitMsg|QueryMsg|ListMsg --qmsg qmsgid --msg message --portid 12345")
+		fmt.Println(os.Stderr, str)
 		log.Fatalf("No Command")
 
 	}

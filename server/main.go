@@ -195,7 +195,7 @@ func (s *gossipServer) GossipMessage(ctx context.Context, msg *pb.GossipMessageS
 	hmd5 := GetMD5Hash(msg.Gmessage)
 	s.pm.Lock()
 	_, ok := gc[hmd5]
-	rf[msg.Rcvrnodeid] += 1
+	rf[int(msg.Rcvrnodeid)] += 1
 	s.pm.Unlock()
 	if !ok {
 		// Gossip only if we don't have the message in our system
